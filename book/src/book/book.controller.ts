@@ -15,7 +15,7 @@ export class BookController {
   constructor(private readonly bookService: BookService) {}
 
   @Get()
-  async showAllBooks() {
+  async showAllBooks(): Book[] {
     return this.bookService.findAll();
   }
 
