@@ -1,4 +1,10 @@
-import { IsString, IsNumber, IsNotEmpty, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsNotEmpty,
+  IsBoolean,
+  Min,
+} from 'class-validator';
 
 export class CreateBookDto {
   @IsString()
@@ -14,6 +20,7 @@ export class CreateBookDto {
 
   @IsNumber()
   @IsNotEmpty()
+  @Min(0, { message: 'The price can not be negative ' })
   readonly price: number;
 
   @IsBoolean()

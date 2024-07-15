@@ -13,7 +13,6 @@ import { RedisService } from './redis.service';
         return new Redis({
           host: configService.get<string>('REDIS_HOST'),
           port: parseInt(configService.get<string>('REDIS_PORT')),
-          //password: configService.get<string>('REDIS_PASSWORD'),
         });
       },
       inject: [ConfigService],

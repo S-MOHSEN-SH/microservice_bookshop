@@ -15,7 +15,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from '../common/guard/auth.guard';
-import { UpdateUserDto } from '../common/dto/user.dto';
+import { CreateUserDto } from 'src/common/dto/user.dto';
 
 @Controller('user')
 export class UserController {
@@ -28,7 +28,10 @@ export class UserController {
   @Put('update/:id')
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ transform: true }))
-  async updateUser(@Param('id') userId: string, @Body() params: UpdateUserDto) {
+  async updateUser(
+    @Param('id') userId: string,
+    @Body() params: Partial<CreateUserDto>,
+  ) {
     try {
       const user = await this.user_client.send(
         { cmd: 'update_user' },

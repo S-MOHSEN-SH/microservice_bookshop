@@ -1,47 +1,36 @@
-import {
-  Body,
-  Controller,
-  Inject,
-  Post,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { CreateUserDto, LoginUserDto } from './dto/createUser.dto';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { LoginUserDto } from '../common/dto/login.dto';
+import { CreateUserDto } from 'src/common/dto/user.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    @Inject('USER_SERVICE') private readonly user_client: ClientProxy,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @UsePipes(new ValidationPipe({ transform: true }))
   async registerUser(@Body() params: CreateUserDto) {
     try {
-      const user = await this.user_client
-        .send({ cmd: 'register_user' }, params)
-        .toPromise();
-      const token = await this.authService.getToken(user._id, user.role);
-      return { user, token };
+      return await this.authService.registerUser(params);
     } catch (error) {
       throw new Error(`Registration failed: ${error.message}`);
     }
   }
 
   @Post('login')
-  @UsePipes(new ValidationPipe({ transform: true }))
   async userLogin(@Body() params: LoginUserDto) {
     try {
-      const user = await this.user_client
-        .send({ cmd: 'user_login' }, params)
-        .toPromise();
-      const token = await this.authService.getToken(user._id, user.role);
-      return { user, token };
+      return await this.authService.loginUser(params);
     } catch (error) {
       throw new Error(`Login failed: ${error.message}`);
+    }
+  }
+
+  @Post('refresh')
+  async refreshTokens(@Body('refresh_token') refreshToken: string) {
+    try {
+      return await this.authService.refreshTokens(refreshToken);
+    } catch (error) {
+      throw new Error(`Token refresh failed: ${error.message}`);
     }
   }
 }

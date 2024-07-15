@@ -5,6 +5,7 @@ import {
   IsArray,
   ValidateNested,
   IsString,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -15,6 +16,7 @@ class CreateOrderItemDto {
 
   @IsNotEmpty()
   @IsNumber()
+  @Min(1, { message: 'The order quantity starts from 1' })
   quantity: number;
 }
 

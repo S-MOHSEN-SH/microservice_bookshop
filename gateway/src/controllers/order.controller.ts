@@ -52,7 +52,6 @@ export class OrderController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
   async createOrder(@Body() createOrderDto: CreateOrderDto) {
-    console.log('i am in the order in the gaeway');
     const response = await firstValueFrom(
       this.httpService.post(
         `${this.configService.get<string>('ORDER_SERVICE_URL')}/${urlConstants.order}`,

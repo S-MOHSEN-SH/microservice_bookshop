@@ -13,6 +13,8 @@ import { RedisModule } from './redis/redis.module';
 @Module({
   imports: [
     AuthModule,
+    HttpModule,
+    RedisModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -23,9 +25,18 @@ import { RedisModule } from './redis/redis.module';
         transport: Transport.TCP,
         options: { port: 5001 },
       },
+      {
+        name: 'MAILER_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://localhost:5672'],
+          queue: 'mail_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
     ]),
-    HttpModule,
-    RedisModule,
   ],
   providers: [JwtService, ConfigService, JwtAuthGuard],
   controllers: [UserController, BookController, OrderController],

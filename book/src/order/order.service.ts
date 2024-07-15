@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 
 import { CreateOrderDto } from 'src/common/dto/order.dto';
@@ -37,7 +37,7 @@ export class OrderService {
     const order = await this.orderModel.create({
       customerId,
       orderDate,
-      totalPrice,
+      totalPrice: Math.round(totalPrice * 100) / 100,
     });
 
     const items = orderItems.map((item) => ({
@@ -46,7 +46,7 @@ export class OrderService {
       orderId: order.id,
     }));
 
-    await this.orderItemModel.bulkCreate(items); // bulkCreate means you can create manyrecords at the same time
+    await this.orderItemModel.bulkCreate(items);
 
     return this.findOneOrder(order.id);
   }
@@ -58,10 +58,14 @@ export class OrderService {
   }
 
   async findOneOrder(id: number): Promise<Order> {
-    return this.orderModel.findOne({
+    const order = this.orderModel.findOne({
       where: { id },
       include: [OrderItem],
     });
+    if (!order) {
+      throw new NotFoundException(`the book with id ${id} does not exist`);
+    }
+    return order;
   }
 
   async deleteOrder(id: number): Promise<void> {

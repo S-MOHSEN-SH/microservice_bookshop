@@ -11,18 +11,3 @@ export class CreateUserDto {
   @IsNotEmpty()
   password: string;
 }
-
-// -------------------------
-
-export class LoginUserDto {
-  email: string;
-  password: string;
-}
-
-// ---------------------
-
-export class UpdateUserDto {
-  readonly fullname?: string;
-  readonly email?: string;
-  readonly password?: string;
-}

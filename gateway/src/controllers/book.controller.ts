@@ -3,6 +3,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpException,
+  HttpStatus,
   Param,
   Post,
   Put,
@@ -16,7 +19,7 @@ import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from '../common/guard/auth.guard';
 import { RolesGuard } from '../common/guard/role.guard';
-import { urlConstants } from 'src/common/constants';
+import { timeConstants, urlConstants } from 'src/common/constants';
 import { RedisService } from 'src/redis/redis.service';
 
 @Controller('book')
@@ -34,16 +37,28 @@ export class BookController {
     const cachedBooks = await this.redisService.get(cachedKey);
 
     if (cachedBooks) {
-      console.log('i used REDIs');
       return JSON.parse(cachedBooks);
     }
-    const response = await firstValueFrom(
-      this.httpService.get(
-        `${this.configService.get<string>('BOOK_SERVICE_URL')}/${urlConstants.book}`,
-      ),
-    );
-    await this.redisService.set(cachedKey, JSON.stringify(response.data), 3600);
-    return response.data;
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(
+          `${this.configService.get<string>('BOOK_SERVICE_URL')}/${urlConstants.book}`,
+        ),
+      );
+
+      await this.redisService.set(
+        cachedKey,
+        JSON.stringify(response.data),
+        timeConstants.redisExp,
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error occurred while fetching the books:', error);
+      throw new HttpException(
+        `Failed to fetch the books: ${error.response.data.message}`,
+        error.response.status,
+      );
+    }
   }
 
   @Get(':id')
@@ -56,14 +71,20 @@ export class BookController {
     if (cachedBook) {
       return JSON.parse(cachedBook);
     }
-
-    const response = await firstValueFrom(
-      this.httpService.get(
-        `${this.configService.get<string>('BOOK_SERVICE_URL')}/${urlConstants.book}/${id}`,
-      ),
-    );
-    await this.redisService.set(cachedKey, JSON.stringify(response), 3600);
-    return response.data;
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(
+          `${this.configService.get<string>('BOOK_SERVICE_URL')}/${urlConstants.book}/${id}`,
+        ),
+      );
+      await this.redisService.set(cachedKey, JSON.stringify(response), 3600);
+      return response.data;
+    } catch (error) {
+      throw new HttpException(
+        `Failed to fetch the book: ${error.response.data.message}`,
+        error.response.status,
+      );
+    }
   }
 
   @Post()
@@ -73,17 +94,28 @@ export class BookController {
     const pattern = `Book_*_${createBookDto.title}`;
     await this.redisService.findandDeleteOldStuff(pattern);
 
-    const response = await firstValueFrom(
-      this.httpService.post(
-        `${this.configService.get<string>('BOOK_SERVICE_URL')}/${urlConstants.book}`,
-        createBookDto,
-      ),
-    );
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          `${this.configService.get<string>('BOOK_SERVICE_URL')}/${urlConstants.book}`,
+          createBookDto,
+        ),
+      );
 
-    const cachedKey = `Book_${response.data.id}_${createBookDto.title}`;
-    await this.redisService.set(cachedKey, JSON.stringify(response.data), 3600);
+      const cachedKey = `Book_${response.data.id}_${createBookDto.title}`;
+      await this.redisService.set(
+        cachedKey,
+        JSON.stringify(response.data),
+        3600,
+      );
 
-    return response.data;
+      return response.data;
+    } catch (error) {
+      throw new HttpException(
+        `Failed to post a book: ${error.response.data.message}`,
+        error.response.status,
+      );
+    }
   }
 
   @Put(':id')
@@ -93,25 +125,40 @@ export class BookController {
     @Param('id') id: number,
     @Body() updateBookDto: Partial<CreateBookDto>,
   ) {
-    const response = await firstValueFrom(
-      this.httpService.put(
-        `${this.configService.get<string>('BOOK_SERVICE_URL')}/${urlConstants.book}/${id}`,
-        updateBookDto,
-      ),
-    );
-    return response.data;
+    try {
+      const response = await firstValueFrom(
+        this.httpService.put(
+          `${this.configService.get<string>('BOOK_SERVICE_URL')}/${urlConstants.book}/${id}`,
+          updateBookDto,
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      throw new HttpException(
+        `Failed to update a book: ${error.response.data.message}`,
+        error.response.status,
+      );
+    }
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: number) {
-    const response = await firstValueFrom(
-      this.httpService.delete(
-        `${this.configService.get<string>('BOOK_SERVICE_URL')}/${urlConstants.book}/${id}`,
-      ),
-    );
-    await this.redisService.del(`Book_${id}`);
-    return response.data;
+    try {
+      const response = await firstValueFrom(
+        this.httpService.delete(
+          `${this.configService.get<string>('BOOK_SERVICE_URL')}/${urlConstants.book}/${id}`,
+        ),
+      );
+      await this.redisService.del(`Book_${id}`);
+      return response.data;
+    } catch (error) {
+      throw new HttpException(
+        `Failed to delete the book: ${error.response.data.message}`,
+        error.response.status,
+      );
+    }
   }
 }

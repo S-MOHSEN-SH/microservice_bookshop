@@ -15,7 +15,6 @@ export class UserController {
 
   @MessagePattern({ cmd: 'register_user' })
   public async createUser(params: CreateUserDto): Promise<User> {
-    console.log('i am in registeration part');
     return this.userService.createUser(params);
   }
 

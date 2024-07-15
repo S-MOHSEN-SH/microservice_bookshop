@@ -15,16 +15,20 @@ import { APP_GUARD } from '@nestjs/core';
         transport: Transport.TCP,
         options: { port: 5001 },
       },
+      {
+        name: 'MAILER_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://localhost:5672'],
+          queue: 'mail_queue',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
     ]),
   ],
-  providers: [
-    JwtService,
-    AuthService,
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: JwtAuthGuard,
-    // },
-  ],
+  providers: [JwtService, AuthService],
   controllers: [AuthController],
 })
 export class AuthModule {}
