@@ -6,14 +6,14 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { CustomJwtService } from '../jwt/jwt.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private jwtService: JwtService,
+    private jwtService: CustomJwtService,
     private configService: ConfigService,
   ) {}
 
@@ -37,9 +37,10 @@ export class RolesGuard implements CanActivate {
     const token = authHeader.split(' ')[1];
 
     try {
-      const user = this.jwtService.verify(token, {
-        secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
-      });
+      const user = this.jwtService.verify(
+        token,
+        this.configService.get<string>('ACCESS_TOKEN_SECRET'),
+      );
 
       if (!user) {
         throw new UnauthorizedException('User not found');

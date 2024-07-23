@@ -10,9 +10,18 @@ import { RedisService } from './redis.service';
     {
       provide: 'REDIS_CLIENT',
       useFactory: (configService: ConfigService) => {
+        const redisHost = configService.get<string>('REDIS_HOST', 'localhost');
+        const redisPort = configService.get<string>('REDIS_PORT', '');
+
+        const parsedRedisPort = parseInt(redisPort, 10);
+
+        if (isNaN(parsedRedisPort)) {
+          throw new Error('Invalid REDIS_PORT value');
+        }
+
         return new Redis({
-          host: configService.get<string>('REDIS_HOST'),
-          port: parseInt(configService.get<string>('REDIS_PORT')),
+          host: redisHost,
+          port: parsedRedisPort,
         });
       },
       inject: [ConfigService],

@@ -1,22 +1,6 @@
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsDate,
-  IsArray,
-  ValidateNested,
-  IsString,
-} from 'class-validator';
+import { IsNotEmpty, IsArray, ValidateNested, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
-
-class CreateOrderItemDto {
-  @IsNotEmpty()
-  @IsNumber()
-  bookId: number;
-
-  @IsNotEmpty()
-  @IsNumber()
-  quantity: number;
-}
+import { CreateOrderItemDto } from './order-item.dto';
 
 export class CreateOrderDto {
   @IsNotEmpty()

@@ -19,7 +19,7 @@ export class RedisService {
     await this.redisClient.del(key);
   }
 
-  async findandDeleteOldStuff(bookInfo: string) {
+  async findandDelete(bookInfo: string) {
     const keys = await this.redisClient.keys(bookInfo);
     if (keys.length > 0) {
       await this.redisClient.del(keys);

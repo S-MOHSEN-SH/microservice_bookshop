@@ -4,14 +4,14 @@ import {
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
+import { CustomJwtService } from '../jwt/jwt.service';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
-    private readonly jwtService: JwtService,
+    private readonly jwtService: CustomJwtService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -23,10 +23,11 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
-      });
-      request['user'] = payload;
+      const payload = await this.jwtService.verify(
+        token,
+        this.configService.get<string>('ACCESS_TOKEN_SECRET')!,
+      );
+      request.user = payload;
     } catch (error) {
       throw new UnauthorizedException('Invalid token');
     }

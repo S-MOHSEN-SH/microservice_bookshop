@@ -1,14 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
-import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from 'src/common/guard/auth.guard';
-import { APP_GUARD } from '@nestjs/core';
+import { CustomJwtService } from 'src/common/jwt/jwt.service';
 
 @Module({
   imports: [
-    JwtModule.register({}),
     ClientsModule.register([
       {
         name: 'USER_SERVICE',
@@ -28,7 +25,7 @@ import { APP_GUARD } from '@nestjs/core';
       },
     ]),
   ],
-  providers: [JwtService, AuthService],
+  providers: [CustomJwtService, AuthService],
   controllers: [AuthController],
 })
 export class AuthModule {}

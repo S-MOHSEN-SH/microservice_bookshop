@@ -9,11 +9,7 @@ export class AuthController {
 
   @Post('register')
   async registerUser(@Body() params: CreateUserDto) {
-    try {
-      return await this.authService.registerUser(params);
-    } catch (error) {
-      throw new Error(`Registration failed: ${error.message}`);
-    }
+    return await this.authService.registerUser(params);
   }
 
   @Post('login')

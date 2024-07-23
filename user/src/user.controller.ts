@@ -8,13 +8,16 @@ import {
   UpdateUserDto,
 } from './common/dto/user.dto';
 import { User } from './schema/user.schema';
+import { updateUser } from './common/interface/updateUser.interface';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @MessagePattern({ cmd: 'register_user' })
-  public async createUser(params: CreateUserDto): Promise<User> {
+  public async createUser(
+    params: CreateUserDto,
+  ): Promise<Omit<User, 'password'>> {
     return this.userService.createUser(params);
   }
 
@@ -25,14 +28,17 @@ export class UserController {
 
   @MessagePattern({ cmd: 'update_user' })
   public async updateUser(
-    @Payload() data: { userId: string; params: UpdateUserDto },
-  ): Promise<User> {
+    @Payload() data: updateUser,
+  ): Promise<Omit<User, 'password'>> {
     return this.userService.updateUser(data.userId, data.params);
   }
 
   @MessagePattern({ cmd: 'delete_user' })
-  public async deleteUser(@Payload() userId: string): Promise<string> {
-    return this.userService.deleteUser(userId);
+  public async deleteUser(
+    @Payload() data: { userId: string; requesterId: string; password?: string },
+  ): Promise<string> {
+    const { userId, requesterId, password } = data;
+    return this.userService.deleteUser(userId, requesterId, password);
   }
 
   @MessagePattern({ cmd: 'find_user_by_id' })

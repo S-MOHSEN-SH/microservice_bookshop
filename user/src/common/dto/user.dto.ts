@@ -15,14 +15,19 @@ export class CreateUserDto {
 // -------------------------
 
 export class LoginUserDto {
+  @IsNotEmpty()
+  @IsEmail()
   email: string;
+
+  @IsNotEmpty()
   password: string;
 }
 
 // ---------------------
 
 export class UpdateUserDto {
-  readonly fullname?: string;
-  readonly email?: string;
-  readonly password?: string;
+  fullname?: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
 }

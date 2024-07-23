@@ -1,87 +1,66 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 import { ClientProxy } from '@nestjs/microservices';
+import { timeConstants } from 'src/common/constants/time.constants';
 import { LoginUserDto } from 'src/common/dto/login.dto';
 import { CreateUserDto } from 'src/common/dto/user.dto';
+import { Token } from 'src/common/interface/token.interface';
+import { CustomJwtService } from 'src/common/jwt/jwt.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly jwtService: JwtService,
+    private readonly jwtService: CustomJwtService,
     private readonly configService: ConfigService,
     @Inject('USER_SERVICE') private readonly userClient: ClientProxy,
     @Inject('MAILER_SERVICE') private readonly mailerClient: ClientProxy,
   ) {}
 
-  async registerUser(params: CreateUserDto) {
+  async registerUser(createUserDto: CreateUserDto) {
     const user = await this.userClient
-      .send({ cmd: 'register_user' }, params)
+      .send({ cmd: 'register_user' }, createUserDto)
       .toPromise();
     const token = await this.getToken(user._id, user.role);
-
-    this.mailerClient.emit('send_registeration_email', {
+    console.log('before emit');
+    this.mailerClient.emit('send_registration_email', {
       to: user.email,
-      subject: 'Registration Confirmation',
-      text: `Welcome ${user.fullname}. Your registration was successful.`,
-      html: `<h1>Hello ${user.fullname}</h1><p>Thank you for registering.</p>`,
+      name: user.fullname,
     });
+    console.log('after emit');
 
-    return { user, token };
+    return token;
   }
 
-  async loginUser(params: LoginUserDto) {
+  async loginUser(loginUserDto: LoginUserDto) {
     const user = await this.userClient
-      .send({ cmd: 'user_login' }, params)
+      .send({ cmd: 'user_login' }, loginUserDto)
       .toPromise();
     const token = await this.getToken(user._id, user.role);
-    return { user, token };
+    return token;
   }
 
-  // async getToken(
-  //   userId: string,
-  //   role: string,
-  // ): Promise<{ access_token: string }> {
-  //   const token = await this.jwtService.signAsync(
-  //     { userId, role },
-  //     {
-  //       expiresIn: '15m',
-  //       secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
-  //     },
-  //   );
-  //   return { access_token: token };
-  // }
-
-  async getToken(
-    userId: string,
-    role: string,
-  ): Promise<{ access_token: string; refresh_token: string }> {
-    const accessToken = await this.jwtService.signAsync(
+  private async getToken(userId: string, role: string): Promise<Token> {
+    const accessToken = await this.jwtService.sign(
       { userId, role },
-      {
-        expiresIn: '15m',
-        secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
-      },
+      timeConstants.ACCESS_TOKEN_EXP,
+      this.configService.get<string>('ACCESS_TOKEN_SECRET')!,
     );
 
-    const refreshToken = await this.jwtService.signAsync(
+    const refreshToken = await this.jwtService.sign(
       { userId, role },
-      {
-        expiresIn: '7d',
-        secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
-      },
+      timeConstants.REFRESH_TOKEN_EXP,
+      this.configService.get<string>('REFRESH_TOKEN_SECRET')!,
     );
 
     return { access_token: accessToken, refresh_token: refreshToken };
   }
 
-  async refreshTokens(
-    refreshToken: string,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  async refreshTokens(refreshToken: string): Promise<Token> {
     try {
-      const payload = await this.jwtService.verifyAsync(refreshToken, {
-        secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
-      });
+      const payload = await this.jwtService.verify(
+        refreshToken,
+        this.configService.get<string>('REFRESH_TOKEN_SECRET')!,
+      );
       return this.getToken(payload.userId, payload.role);
     } catch (error) {
       throw new Error('Invalid refresh token');
