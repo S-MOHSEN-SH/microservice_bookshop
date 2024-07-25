@@ -18,6 +18,5 @@ async function bootstrap() {
     },
   );
   app.listen();
-  //() => console.log(`mailer microservice is listening `)
 }
 bootstrap();
