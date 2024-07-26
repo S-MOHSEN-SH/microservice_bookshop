@@ -1,15 +1,3 @@
-// import { Module } from '@nestjs/common';
-// import { AppController } from './app.controller';
-// import { AppService } from './app.service';
-// import { ConfigModule } from '@nestjs/config';
-
-// @Module({
-//   imports: [ConfigModule.forRoot({ isGlobal: true })],
-//   controllers: [AppController],
-//   providers: [AppService],
-// })
-// export class AppModule {}
-
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { Module } from '@nestjs/common';
@@ -25,8 +13,6 @@ import { MailController } from './mail.controller';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         transport: {
-          // host: configService.get<string>('MAIL_HOST'),
-          // port: configService.get<number>('MAIL_PORT'),
           service: 'gmail',
           secure: false,
           auth: {
