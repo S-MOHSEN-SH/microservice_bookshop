@@ -9,7 +9,7 @@ async function bootstrap() {
     {
       transport: Transport.RMQ,
       options: {
-        urls: [`amqp://localhost:${new ConfigService().get('RABBITMQ_PORT')}`],
+        urls: [`amqp://${new ConfigService().get('RABBITMQ_HOST')}:${new ConfigService().get('RABBITMQ_PORT')}`],
         queue: 'mail_queue',
         queueOptions: {
           durable: false,

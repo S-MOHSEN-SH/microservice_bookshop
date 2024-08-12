@@ -42,7 +42,17 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'find_user_by_id' })
-  public async findUserById(@Payload() userId: string): Promise<User> {
+  public async findUserById(@Payload() userId: string): Promise<Omit<User, 'password'>> {
     return this.userService.findUserById(userId);
+  }
+
+  @MessagePattern({cmd:'go_to_user_dashboard'})
+  public async userProfile(@Payload() userId:string): Promise<Omit<User, 'password'>>{
+    return this.userService.findAuthUser(userId)
+  }
+
+  @MessagePattern({ cmd: 'find_all_users' })
+  public async findAllUsers(): Promise<Omit<User, 'password'>[]> {
+    return this.userService.findAllUsers();
   }
 }

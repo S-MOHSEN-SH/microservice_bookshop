@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { Roles } from 'src/common/decorator/role.decorator';
 import { User } from 'src/common/decorator/user.decorator';
+import { CreateOrderItemDto } from 'src/common/dto/order-item.dto';
 import { CreateOrderDto } from 'src/common/dto/order.dto';
 import { Role } from 'src/common/enum/role.enum';
 import { JwtAuthGuard } from 'src/common/guard/auth.guard';
@@ -64,6 +65,23 @@ export class OrderController {
       this.httpService.post(
         `${this.configService.get<string>('ORDER_SERVICE_URL')}`,
         createOrderDto,
+      ),
+    );
+    return response.data;
+  }
+
+  @Post(':id/item')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.User, Role.Admin)
+  @HttpCode(HttpStatus.OK)
+  async addOrderItem(
+    @Param('id') id: number,
+    @Body() addOrderItemDto: CreateOrderItemDto,
+  ) {
+    const response = await firstValueFrom(
+      this.httpService.post(
+        `${this.configService.get<string>('ORDER_SERVICE_URL')}/${id}/item`,
+        addOrderItemDto,
       ),
     );
     return response.data;

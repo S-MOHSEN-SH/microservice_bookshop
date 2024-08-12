@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from 'src/common/dto/createOrder.dto';
+import { CreateOrderItemDto } from 'src/common/dto/order.dto';
 
 @Controller('order')
 export class OrderController {
@@ -31,6 +32,12 @@ export class OrderController {
     @Headers('user-role') userRole: string,
   ): Promise<CreateOrderDto> {
     return this.orderService.findOneOrder(id, userId, userRole);
+  }
+
+  @Post()
+  async addOrder(@Param('id') id: number,
+  @Body() addOrderItemDto: CreateOrderItemDto){
+    return this.orderService.addOrderItem(id,addOrderItemDto)
   }
 
   @Delete(':id')

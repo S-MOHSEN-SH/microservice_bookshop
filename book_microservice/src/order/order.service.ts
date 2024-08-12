@@ -5,6 +5,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { AddOrderItemDto } from 'src/common/dto/addOrder.dto';
 import { CreateOrderDto } from 'src/common/dto/createOrder.dto';
 import { BookModel } from 'src/common/entity/book.model';
 import { OrderItem } from 'src/common/entity/order-item.model';
@@ -90,6 +91,43 @@ export class OrderService {
       throw error;
     }
   }
+
+  async addOrderItem(orderId: number, orderItemDto: AddOrderItemDto): Promise<Order> {
+    const transaction = await this.orderModel.sequelize.transaction();
+    try {
+      const order = await this.orderModel.findByPk(orderId, { transaction });
+      if (!order) {
+        throw new NotFoundException(`Order with id ${orderId} not found`);
+      }
+
+      const book = await this.bookModel.findByPk(orderItemDto.bookId, { transaction });
+      if (!book) {
+        throw new NotFoundException(`Book with id ${orderItemDto.bookId} not found`);
+      }
+
+      const orderItem = {
+        ...orderItemDto,
+        orderId: order.id,
+      };
+
+      await this.orderItemModel.create(orderItem, { transaction });
+
+      const updatedOrder = await this.orderModel.findOne({
+        where: { id: order.id },
+        include: [OrderItem],
+        transaction,
+      });
+
+      await transaction.commit();
+      return updatedOrder;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
+
+
 
   async findAll(): Promise<Order[]> {
     return this.orderModel.findAll({
