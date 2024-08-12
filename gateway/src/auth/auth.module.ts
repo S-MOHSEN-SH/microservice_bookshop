@@ -10,7 +10,7 @@ import { CustomJwtService } from 'src/common/jwt/jwt.service';
       {
         name: 'USER_SERVICE',
         transport: Transport.TCP,
-        options: { port: 5001 },
+        options: { port: 5004 },
       },
       {
         name: 'MAILER_SERVICE',

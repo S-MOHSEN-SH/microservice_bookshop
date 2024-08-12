@@ -17,6 +17,7 @@ import { User } from 'src/common/decorator/user.decorator';
 import { RolesGuard } from 'src/common/guard/role.guard';
 import { Role } from 'src/common/enum/role.enum';
 import { Roles } from 'src/common/decorator/role.decorator';
+import { UserPayload } from 'src/common/interface/userPayload.interface';
 @Controller('user')
 export class UserController {
   constructor(
@@ -24,10 +25,21 @@ export class UserController {
     private readonly configService: ConfigService,
   ) {}
 
-  @Put('update/:id')
+  @Get('me')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getMe(@User() userId: UserPayload) {
+    try {
+      const user = this.user_client.send({ cmd: 'go_to_user_dashboard' }, userId.userId);
+      return user;
+    } catch (error) {
+      throw new Error(`Get user info failed: ${error.message}`);
+    }
+  }
+
+  @Put('update/me')
   @UseGuards(JwtAuthGuard)
   async updateUser(
-    @Param('id') userId: string,
+    @User() userId: string,
     @Body() params: Partial<CreateUserDto>,
   ) {
     try {
@@ -40,32 +52,6 @@ export class UserController {
       throw new Error(`Update failed: ${error.message}`);
     }
   }
-
-  // @Delete('delete/:id')
-  // @UseGuards(JwtAuthGuard)
-  // async deleteUser(
-  //   @Param('id') userId: string,
-  //   @Body('password') password: string,
-  //   @Request() req: Request,
-  // ) {
-  //   try {
-  //     const requesterId = req.user.userId;
-  //     const role = req.user.role;
-
-  //     const payload =
-  //       role === 'admin'
-  //         ? { userId, requesterId }
-  //         : { userId, requesterId, password };
-
-  //     const result = await this.user_client
-  //       .send({ cmd: 'delete_user' }, payload)
-  //       .toPromise();
-
-  //     return result;
-  //   } catch (error) {
-  //     throw new Error(`Delete failed: ${error.message}`);
-  //   }
-  // }
 
   @Delete('delete/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -95,10 +81,11 @@ export class UserController {
   }
 
   @Get('/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard,RolesGuard)
+  @Roles(Role.Admin)
   async findUserById(@Param('id') userId: string) {
     try {
-      const user = await this.user_client.send(
+      const user = this.user_client.send(
         { cmd: 'find_user_by_id' },
         userId,
       );
@@ -107,4 +94,19 @@ export class UserController {
       throw new Error(`Find user failed: ${error.message}`);
     }
   }
+
+  @Get('/all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  async findAllUsers() {
+    console.log('before try in gateway')
+    try {
+      const users = this.user_client.send({ cmd: 'find_all_users' }, {});
+      console.log('after try in gateway', users)
+      return users;
+    } catch (error) {
+      throw new Error(`Fetch all users failed: ${error.message}`);
+    }
+  }
+
 }

@@ -23,13 +23,18 @@ import { BookService } from './book/book.service';
       {
         name: 'USER_SERVICE',
         transport: Transport.TCP,
-        options: { port: 5001 },
+        options: { 
+          // port: new ConfigService().get('USER_SERVICE_PORT'),
+          // host: new ConfigService().get('USER_SERVICE_HOST')
+          port:5004,
+          host:'localhost'
+        },
       },
       {
         name: 'MAILER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://localhost:5672'],
+          // urls: [`amqp://${new ConfigService().get('RABBITMQ_HOST')}:${new ConfigService().get('RABBITMQ_PORT')}`],
           queue: 'mail_queue',
           queueOptions: {
             durable: false,

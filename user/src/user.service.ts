@@ -37,6 +37,7 @@ export class UserService {
     return userWithoutPass;
   }
 
+
   async login(params: LoginUserDto) {
     const user = await this.userModel.findOne({ email: params.email });
     if (!user) {
@@ -48,6 +49,7 @@ export class UserService {
     }
     return user;
   }
+
 
   async updateUser(
     userId: string,
@@ -83,6 +85,7 @@ export class UserService {
     return userWithoutPassword;
   }
 
+
   async deleteUser(
     userId: string,
     requesterId: string,
@@ -101,6 +104,7 @@ export class UserService {
     }
     return 'User deleted';
   }
+
 
   private async validateNonAdminUser(
     userId: string,
@@ -121,11 +125,42 @@ export class UserService {
     }
   }
 
-  async findUserById(userId: string): Promise<User> {
+
+  async findUserById(userId: string): Promise<Omit<User, 'password'>> {
     const user = await this.userModel.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user;
+    const { password, ...userWithoutPass } = user.toObject();
+    return userWithoutPass;
+  }
+
+
+  async findAuthUser(userId: string): Promise<Omit<User, 'password'>> {
+    try {
+      const user = await this.userModel.findById(userId);
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+      const { password, ...userWithoutPass } = user.toObject();
+      return userWithoutPass;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+
+  async findAllUsers(): Promise<Omit<User, 'password'>[]> {
+    console.log('before try in user micro')
+    try {
+      const users = await this.userModel.find();
+      console.log('after try in user microservice', users)
+      return users.map((user) => {
+        const { password, ...userWithoutPass } = user.toObject();
+        return userWithoutPass;
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 }
